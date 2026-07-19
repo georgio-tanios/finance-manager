@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,8 +30,8 @@ class ExpenseControllerIntegrationTest {
     void createExpense_success() throws Exception {
         ExpenseDTO dto = new ExpenseDTO();
         dto.setName("Test Expense");
-        dto.setAmount(100.0);
-        dto.setDate(LocalDate.now());
+        dto.setAmount(new BigDecimal("100.00"));
+        dto.setExpenseDate(LocalDate.now());
 
         mockMvc.perform(
                         post("/api/expenses")

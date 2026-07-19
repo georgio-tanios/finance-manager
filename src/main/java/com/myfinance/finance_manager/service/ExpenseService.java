@@ -3,6 +3,7 @@ package com.myfinance.finance_manager.service;
 import com.myfinance.finance_manager.model.Expense;
 import org.springframework.data.domain.Page;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -32,14 +33,14 @@ public interface ExpenseService {
     // Search / filter helpers
     List<Expense> searchByName(String keyword);
 
-    List<Expense> findByAmountBetween(Double min, Double max);
+    List<Expense> findByAmountBetween(BigDecimal min, BigDecimal max);
 
     List<Expense> findByDateBetween(LocalDate start, LocalDate end);
 
     /**
      * Flexible combined filter.
      */
-    List<Expense> filterCombined(String name, Double minAmount, Double maxAmount,
+    List<Expense> filterCombined(String name, BigDecimal minAmount, BigDecimal maxAmount,
                                  LocalDate startDate, LocalDate endDate);
 
     /**

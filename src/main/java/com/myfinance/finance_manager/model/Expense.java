@@ -1,6 +1,8 @@
 package com.myfinance.finance_manager.model;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -11,34 +13,35 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String name;
 
-    private Double amount;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
 
-    private LocalDate date;
+    @Column(name =  "expense_date", nullable = false)
+    private LocalDate expenseDate;
 
     // Constructors
-    public Expense() {}
+    protected Expense() {}
 
-    public Expense(Long id, String name, Double amount, LocalDate date) {
-        this.id = id;
+    public Expense(String name, BigDecimal amount, LocalDate expenseDate) {
         this.name = name;
         this.amount = amount;
-        this.date = date;
+        this.expenseDate = expenseDate;
     }
 
     // Getters & Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Double getAmount() { return amount; }
-    public void setAmount(Double amount) { this.amount = amount; }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public LocalDate getExpenseDate() { return expenseDate; }
+    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }
 
     @Override
     public String toString() {
@@ -46,7 +49,7 @@ public class Expense {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", amount=" + amount +
-                ", date=" + date +
+                ", expenseDate=" + expenseDate +
                 '}';
     }
 }

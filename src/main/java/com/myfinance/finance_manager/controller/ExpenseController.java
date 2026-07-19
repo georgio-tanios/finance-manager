@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -78,7 +79,7 @@ public class ExpenseController {
     @Operation(summary = "Filter expenses by amount range", description = "Return expenses between the given min and max amount")
     @ApiResponse(responseCode = "200", description = "Expenses filtered successfully")
     @GetMapping("/filter")
-    public ResponseEntity<List<ExpenseDTO>> filterByAmountRange(@RequestParam double min, @RequestParam double max) {
+    public ResponseEntity<List<ExpenseDTO>> filterByAmountRange(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
         List<ExpenseDTO> result = expenseService.findByAmountBetween(min, max)
                 .stream()
                 .map(expense -> modelMapper.map(expense, ExpenseDTO.class))

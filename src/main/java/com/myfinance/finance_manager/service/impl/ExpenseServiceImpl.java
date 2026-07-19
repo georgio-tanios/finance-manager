@@ -9,6 +9,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +60,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         // Update fields explicitly (avoid replacing the managed entity instance)
         existing.setName(updatedExpense.getName());
         existing.setAmount(updatedExpense.getAmount());
-        existing.setDate(updatedExpense.getDate());
+        existing.setExpenseDate(updatedExpense.getExpenseDate());
 
         // Save and return managed entity
         Expense saved = expenseRepository.save(existing);
@@ -87,28 +88,76 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public List<Expense> findByAmountBetween(Double min, Double max) {
-        log.debug("Finding expenses with amount between {} and {}", min, max);
+    public List<Expense> findByAmountBetween(
+            BigDecimal min,
+            BigDecimal max
+    ) {
+        log.debug(
+                "Finding expenses with amount between {} and {}",
+                min,
+                max
+        );
+
         if (min == null || max == null) {
-            throw new IllegalArgumentException("min and max must be provided");
+            throw new IllegalArgumentException(
+                    "min and max must be provided"
+            );
         }
+
+        if (min.compareTo(max) > 0) {
+            throw new IllegalArgumentException(
+                    "min amount must be less than or equal to max amount"
+            );
+        }
+
         return expenseRepository.findByAmountBetween(min, max);
     }
 
     @Override
-    public List<Expense> findByDateBetween(LocalDate start, LocalDate end) {
-        log.debug("Finding expenses by date between {} and {}", start, end);
+    public List<Expense> findByDateBetween(
+            LocalDate start,
+            LocalDate end
+    ) {
+        log.debug(
+                "Finding expenses by date between {} and {}",
+                start,
+                end
+        );
+
         if (start == null || end == null) {
-            throw new IllegalArgumentException("start and end dates must be provided");
+            throw new IllegalArgumentException(
+                    "start and end dates must be provided"
+            );
         }
-        return expenseRepository.findByDateBetween(start, end);
+
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException(
+                    "start date must be before or equal to end date"
+            );
+        }
+
+        return expenseRepository.findByExpenseDateBetween(start, end);
     }
 
     @Override
-    public List<Expense> filterCombined(String name, Double minAmount, Double maxAmount, LocalDate startDate, LocalDate endDate) {
-        log.debug("Filtering combined: name={}, min={}, max={}, start={}, end={}", name, minAmount, maxAmount, startDate, endDate);
+    public List<Expense> filterCombined(
+            String name,
+            BigDecimal minAmount,
+            BigDecimal maxAmount,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        log.debug(
+                "Filtering combined: name={}, min={}, max={}, start={}, end={}",
+                name,
+                minAmount,
+                maxAmount,
+                startDate,
+                endDate
+        );
+
         return expenseRepository.filterExpenses(
-                (name == null || name.isBlank()) ? null : name,
+                name == null || name.isBlank() ? null : name,
                 minAmount,
                 maxAmount,
                 startDate,
