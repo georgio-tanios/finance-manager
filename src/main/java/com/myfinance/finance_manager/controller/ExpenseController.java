@@ -1,12 +1,15 @@
 package com.myfinance.finance_manager.controller;
 
 import com.myfinance.finance_manager.dto.ExpenseDTO;
+import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
 import com.myfinance.finance_manager.service.ExpenseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -116,5 +119,22 @@ public class ExpenseController {
             log.error("Expense not found for deletion with ID: {}", id);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ExpenseStatisticsDTO> getMonthlyStatistics(
+            @RequestParam
+            @Min(value = 1, message = "Year should be positive")
+            int year,
+
+            @RequestParam
+            @Min(value = 1, message = "Month should be between 1 and 12")
+            @Max(value = 12, message = "Month should be between 1 and 12")
+            int month
+    ) {
+        // Appeler expenseService et retourner 200 OK
+        ExpenseStatisticsDTO statistics = expenseService.getMonthlyStatistics(year, month);
+
+        return ResponseEntity.ok(statistics);
     }
 }

@@ -1,6 +1,8 @@
 package com.myfinance.finance_manager.service.impl;
 
+import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.exception.ResourceNotFoundException;
+import com.myfinance.finance_manager.mapper.ExpenseMapper;
 import com.myfinance.finance_manager.model.Expense;
 import com.myfinance.finance_manager.repository.ExpenseRepository;
 import com.myfinance.finance_manager.service.ExpenseService;
@@ -10,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,9 +31,11 @@ import java.util.Optional;
 public class ExpenseServiceImpl implements ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final ExpenseMapper expenseMapper;
 
-    public ExpenseServiceImpl(ExpenseRepository expenseRepository) {
+    public ExpenseServiceImpl(ExpenseRepository expenseRepository, ExpenseMapper expenseMapper) {
         this.expenseRepository = expenseRepository;
+        this.expenseMapper = expenseMapper;
     }
 
     @Override
@@ -172,4 +179,73 @@ public class ExpenseServiceImpl implements ExpenseService {
         Pageable pageable = PageRequest.of(Math.max(0, page), Math.max(1, size), sort);
         return expenseRepository.findAll(pageable);
     }
+
+    @Override
+    public ExpenseStatisticsDTO getMonthlyStatistics(int year, int month) {
+
+        if (year <= 0) {
+            throw new IllegalArgumentException(
+                    "Year should be positive"
+            );
+        }
+
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException(
+                    "Month should be between 1 and 12"
+            );
+        }
+
+        YearMonth selectedMonth = YearMonth.of(year, month);
+
+        LocalDate startDate = selectedMonth.atDay(1);
+        LocalDate endDate = selectedMonth.atEndOfMonth();
+
+        List<Expense> expensesOfMonth =
+                expenseRepository.findByExpenseDateBetween(
+                        startDate,
+                        endDate
+                );
+
+        BigDecimal zero = BigDecimal.ZERO.setScale(2);
+
+        if (expensesOfMonth.isEmpty()) {
+            return new ExpenseStatisticsDTO(
+                    year,
+                    month,
+                    0,
+                    zero,
+                    zero,
+                    null
+            );
+        }
+
+        BigDecimal total = zero;
+        Expense highestExpense = null;
+
+        for (Expense expense : expensesOfMonth) {
+            total = total.add(expense.getAmount());
+
+            if (highestExpense == null
+                    || expense.getAmount()
+                    .compareTo(highestExpense.getAmount()) > 0) {
+                highestExpense = expense;
+            }
+        }
+
+        BigDecimal average = total.divide(
+                BigDecimal.valueOf(expensesOfMonth.size()),
+                2,
+                RoundingMode.HALF_UP
+        );
+
+        return new ExpenseStatisticsDTO(
+                year,
+                month,
+                expensesOfMonth.size(),
+                total,
+                average,
+                expenseMapper.toDto(highestExpense)
+        );
+    }
+
 }

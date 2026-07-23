@@ -1,6 +1,7 @@
 package com.myfinance.finance_manager.mapper;
 
 import com.myfinance.finance_manager.dto.ExpenseDTO;
+import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;

@@ -1,5 +1,6 @@
 package com.myfinance.finance_manager.service;
 
+import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
 import org.springframework.data.domain.Page;
 
@@ -52,4 +53,6 @@ public interface ExpenseService {
      * @param direction "asc" or "desc"
      */
     Page<Expense> getExpensesPaginatedAndSorted(int page, int size, String sortBy, String direction);
+
+    ExpenseStatisticsDTO getMonthlyStatistics(int year, int month);
 }
