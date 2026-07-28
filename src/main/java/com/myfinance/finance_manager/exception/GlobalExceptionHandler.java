@@ -5,6 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+import java.util.Objects;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +36,36 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException ex) {
         Map<String, String> body = new HashMap<>();
         body.put("error", ex.getMessage());
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, String>> handleMethodValidation(
+            HandlerMethodValidationException ex
+    ) {
+        String message = ex.getAllErrors()
+                .stream()
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("Request validation failed");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("error", message);
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, String>> handleMissingRequestParameter(
+            MissingServletRequestParameterException ex
+    ) {
+        Map<String, String> body = new HashMap<>();
+        body.put(
+                "error",
+                "Required parameter '" + ex.getParameterName() + "' is missing"
+        );
+
         return ResponseEntity.badRequest().body(body);
     }
 

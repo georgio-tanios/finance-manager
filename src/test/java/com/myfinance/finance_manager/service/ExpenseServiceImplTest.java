@@ -7,7 +7,6 @@ import com.myfinance.finance_manager.mapper.ExpenseMapper;
 import com.myfinance.finance_manager.model.Expense;
 import com.myfinance.finance_manager.repository.ExpenseRepository;
 import com.myfinance.finance_manager.service.impl.ExpenseServiceImpl;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

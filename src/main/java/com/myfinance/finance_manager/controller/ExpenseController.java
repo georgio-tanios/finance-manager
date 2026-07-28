@@ -32,7 +32,7 @@ public class ExpenseController {
     private final ExpenseService expenseService;
     private final ModelMapper modelMapper;
 
-    // 🧾 GET all expenses
+    // GET all expenses
     @Operation(summary = "Get all expenses", description = "Fetch a list of all saved expenses")
     @ApiResponse(responseCode = "200", description = "Expenses retrieved successfully")
     @GetMapping
@@ -44,7 +44,7 @@ public class ExpenseController {
         return ResponseEntity.ok(expenses);
     }
 
-    // ➕ CREATE a new expense
+    // CREATE a new expense
     @Operation(summary = "Create new expense", description = "Add a new expense record to the database")
     @ApiResponse(responseCode = "201", description = "Expense created successfully")
     @PostMapping
@@ -55,7 +55,7 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
-    // 🔍 GET expense by ID
+    // GET expense by ID
     @Operation(summary = "Get expense by ID", description = "Retrieve a specific expense by its ID")
     @ApiResponse(responseCode = "200", description = "Expense retrieved successfully")
     @ApiResponse(responseCode = "404", description = "Expense not found")
@@ -66,7 +66,7 @@ public class ExpenseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 🔎 SEARCH expenses by keyword (name contains)
+    // SEARCH expenses by keyword (name contains)
     @Operation(summary = "Search expenses by keyword", description = "Search expenses whose name contains the given keyword")
     @ApiResponse(responseCode = "200", description = "Expenses found successfully")
     @GetMapping("/search")
@@ -78,7 +78,7 @@ public class ExpenseController {
         return ResponseEntity.ok(result);
     }
 
-    // 💰 FILTER expenses by amount range
+    // FILTER expenses by amount range
     @Operation(summary = "Filter expenses by amount range", description = "Return expenses between the given min and max amount")
     @ApiResponse(responseCode = "200", description = "Expenses filtered successfully")
     @GetMapping("/filter")
@@ -90,7 +90,7 @@ public class ExpenseController {
         return ResponseEntity.ok(result);
     }
 
-    // ✏️ UPDATE an existing expense
+    // UPDATE an existing expense
     @Operation(summary = "Update expense", description = "Update an existing expense by ID")
     @ApiResponse(responseCode = "200", description = "Expense updated successfully")
     @ApiResponse(responseCode = "404", description = "Expense not found")
@@ -106,7 +106,7 @@ public class ExpenseController {
         }
     }
 
-    // ❌ DELETE expense by ID
+    // DELETE expense by ID
     @Operation(summary = "Delete expense", description = "Delete an expense record by ID")
     @ApiResponse(responseCode = "204", description = "Expense deleted successfully")
     @ApiResponse(responseCode = "404", description = "Expense not found")
@@ -132,9 +132,7 @@ public class ExpenseController {
             @Max(value = 12, message = "Month should be between 1 and 12")
             int month
     ) {
-        // Appeler expenseService et retourner 200 OK
         ExpenseStatisticsDTO statistics = expenseService.getMonthlyStatistics(year, month);
-
         return ResponseEntity.ok(statistics);
     }
 }
