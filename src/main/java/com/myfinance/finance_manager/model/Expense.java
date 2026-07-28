@@ -1,9 +1,9 @@
 package com.myfinance.finance_manager.model;
 
-import java.time.LocalDate;
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "expenses")
@@ -11,49 +11,37 @@ public class Expense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @NotBlank(message = "Name is required")
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Positive(message = "Amount must be greater than 0")
-    @NotNull(message = "Amount is required")
-    private Double amount;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
 
-    @NotNull(message = "Date is required")
-    private LocalDate date;
+    @Column(name =  "expense_date", nullable = false)
+    private LocalDate expenseDate;
 
-    public long getId() {
-        return id;
-    }
+    // Constructors
+    protected Expense() {}
 
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public Expense(String name, BigDecimal amount, LocalDate expenseDate) {
         this.name = name;
-    }
-
-    public Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(Double amount) {
         this.amount = amount;
+        this.expenseDate = expenseDate;
     }
+
+    // Getters & Setters
+    public Long getId() { return id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public LocalDate getExpenseDate() { return expenseDate; }
+    public void setExpenseDate(LocalDate expenseDate) { this.expenseDate = expenseDate; }
 
     @Override
     public String toString() {
@@ -61,17 +49,7 @@ public class Expense {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", amount=" + amount +
-                ", date=" + date +
+                ", expenseDate=" + expenseDate +
                 '}';
-    }
-
-    public Expense() {
-    }
-
-    public Expense(long id, String name, Double amount, LocalDate date) {
-        this.id = id;
-        this.name = name;
-        this.amount = amount;
-        this.date = date;
     }
 }

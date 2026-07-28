@@ -2,22 +2,34 @@ package com.myfinance.finance_manager.dto;
 
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class ExpenseDTO {
+
     private Long id;
 
     @NotBlank(message = "Name is required")
+    @Size(max = 100, message = "Name must not exceed 100 characters")
     private String name;
 
     @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be positive")
-    private Double amount;
+    @DecimalMin(
+            value = "0.01",
+            inclusive = true,
+            message = "Amount must be at least 0.01"
+    )
+    @Digits(
+            integer = 10,
+            fraction = 2,
+            message = "Amount must contain at most 10 integer digits and 2 decimal places"
+    )
+    private BigDecimal amount;
 
-    @NotNull(message = "Date is required")
-    private LocalDate date;
+    @NotNull(message = "Expense date is required")
+    private LocalDate expenseDate;
 
-    // Getters and Setters
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -34,19 +46,19 @@ public class ExpenseDTO {
         this.name = name;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getExpenseDate() {
+        return expenseDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setExpenseDate(LocalDate expenseDate) {
+        this.expenseDate = expenseDate;
     }
 }

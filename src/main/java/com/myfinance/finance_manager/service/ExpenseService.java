@@ -1,70 +1,58 @@
 package com.myfinance.finance_manager.service;
 
-import java.time.LocalDate;
-import java.util.*;
+import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
-import com.myfinance.finance_manager.repository.ExpenseRepository;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
-@Service
-@Slf4j // <-- Lombok creates a logger named “log”
-public class ExpenseService {
-// the code below is used when we saved data in application memory
-// this data will be removed after stopping the application
+/**
+ * Service interface for Expense domain operations.
+ * Keep business logic in implementation; controller should remain thin.
+ */
+public interface ExpenseService {
 
-//        private final List<Expense> expenses = new ArrayList<>();
-//
-//        public Expense saveExpense(Expense expense){
-//            expense.setId((long) (expenses.size()+1));
-//            expenses.add(expense);
-//            return expense;
-//        }
-//
-//        public List<Expense> getAllExpenses(){
-//            return expenses;
-//        }
+    Expense saveExpense(Expense expense);
 
-    //now will we use a database for persist data,
-    //with that data will be saved in this memory
-    // and we can return to this data even if the application is stoped
-    // (we don't lose data when we stoop the app because are saved in database)
+    List<Expense> getAllExpenses();
 
-    private final ExpenseRepository expenseRepository;
+    Optional<Expense> getExpensesById(Long id);
 
-    public ExpenseService(ExpenseRepository expenseRepository) {
-        this.expenseRepository = expenseRepository;
-    }
+    /**
+     * Update an existing expense. Throws ResourceNotFoundException if not found.
+     */
+    Expense updateExpense(Long id, Expense updatedExpense);
 
-    public Expense saveExpense(Expense expense) {
-        return expenseRepository.save(expense);
-    }
+    /**
+     * Delete an expense by id. Throws ResourceNotFoundException if not found.
+     */
+    void deleteExpense(Long id);
 
-    public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
-    }
+    // Search / filter helpers
+    List<Expense> searchByName(String keyword);
 
-    public Optional<Expense> getExpensesById(Long id){
-        return expenseRepository.findById(id);
-    }
+    List<Expense> findByAmountBetween(BigDecimal min, BigDecimal max);
 
-    public Expense updateExpense(Long id, Expense updatedExpense) {
-        return expenseRepository.findById(id)
-                .map(expense -> {
-                    expense.setDate(updatedExpense.getDate());
-                    expense.setAmount(updatedExpense.getAmount());
-                    expense.setName(updatedExpense.getName());
-                    return expenseRepository.save(expense);
-                })
-                .orElseThrow(() -> new NoSuchElementException("Expense not found with id : " +id));
-    }
+    List<Expense> findByDateBetween(LocalDate start, LocalDate end);
 
-    public void deleteExpense(Long id){
-        if (!expenseRepository.existsById(id)){
-            throw new NoSuchElementException("Expense not found with id : " +id);
-        }
-        expenseRepository.deleteById(id);
-    }
+    /**
+     * Flexible combined filter.
+     */
+    List<Expense> filterCombined(String name, BigDecimal minAmount, BigDecimal maxAmount,
+                                 LocalDate startDate, LocalDate endDate);
+
+    /**
+     * Pagination + sorting support.
+     *
+     * @param page zero-based page index
+     * @param size page size
+     * @param sortBy property to sort by
+     * @param direction "asc" or "desc"
+     */
+    Page<Expense> getExpensesPaginatedAndSorted(int page, int size, String sortBy, String direction);
+
+    ExpenseStatisticsDTO getMonthlyStatistics(int year, int month);
 }

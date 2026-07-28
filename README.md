@@ -1,30 +1,80 @@
-Finance Manager API
+# Finance Manager API
 
-API REST de gestion des finances personnelles permettant de gérer les dépenses, les revenus, les comptes bancaires et les budgets.
-Les technos utilisés pour ce projet sont les suivantes:
-  -java 17
-  -Spring Boot 3
-  -Spring Data JPA
-  -PostgreSQL
-  -Maven
-  -Swagger/OpenUI
-  -JUnit 5
-  -Mockito
+## Project Overview
+A modern Spring Boot REST API for personal finance management.
 
-Architecture utilisé:
-Controller -> Service -> Repository -> PostgreSQL
+## Features
+    ✔ Expense Management
+    ✔ Categories
+    ✔ Validation
+    ✔ Exception Handling
+    ✔ Swagger Documentation
 
-Fonctionalité:
-  -Gestion des dépenses
-  -Revenus
-  -Budgets
-  -Comptes
-  -Utilisateurs
-  -Authentification
-  -Docker
-  -Kafka 
+### Current Features
+    - Manage expenses
+    - CRUD operations for expenses
+    - Request validation
+    - Global exception handling
+    - PostgreSQL persistence
+    - Swagger/OpenAPI documentation
+    - Unit tests
+    - Integration tests
 
-Installation:
+### Planned Features
+    Income Management
+    Category Management 
+    Budget Management
+    Bank Accounts
+    Authentication & Authorization (JWT)
+    Docker
+    CI/CD
+    Kafka
+    Microservices
 
+## Technology Stack
+    Java 17
+    Spring Boot 3
+    Spring Data JPA
+    PostgreSQL
+    Maven
+    Swagger
+    JUnit
+    Mockito
 
-API Documentation:
+## Architecture
+Client
+│
+▼
+REST Controller
+│
+▼
+Service
+│
+▼
+Repository
+│
+▼
+PostgreSQL
+
+## Getting Started
+...
+
+### Prerequisites
+
+### Installation
+
+### Running the Application
+
+## API Documentation
+http://localhost:8080/swagger-ui/index.html
+
+## Project Roadmap
+ROADMAP.md
+
+## Project Status
+
+This project is actively under development.
+New features are added incrementally following modern Spring Boot best practices.
+
+## Author
+Georgio TANIOS
