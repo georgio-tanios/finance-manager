@@ -4,15 +4,16 @@ import com.myfinance.finance_manager.dto.ExpenseDTO;
 import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
 import com.myfinance.finance_manager.service.ExpenseService;
+import com.myfinance.finance_manager.mapper.ExpenseMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
-    private final ModelMapper modelMapper;
+    private final ExpenseMapper expenseMapper;
 
     // GET all expenses
     @Operation(summary = "Get all expenses", description = "Fetch a list of all saved expenses")
@@ -39,7 +40,7 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseDTO>> getAllExpenses() {
         List<ExpenseDTO> expenses = expenseService.getAllExpenses()
                 .stream()
-                .map(expense -> modelMapper.map(expense, ExpenseDTO.class))
+                .map(expenseMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(expenses);
     }
@@ -49,9 +50,9 @@ public class ExpenseController {
     @ApiResponse(responseCode = "201", description = "Expense created successfully")
     @PostMapping
     public ResponseEntity<ExpenseDTO> createExpense(@Valid @RequestBody ExpenseDTO expenseDTO) {
-        Expense expense = modelMapper.map(expenseDTO, Expense.class);
+        Expense expense = expenseMapper.toEntity(expenseDTO);
         Expense savedExpense = expenseService.saveExpense(expense);
-        ExpenseDTO responseDTO = modelMapper.map(savedExpense, ExpenseDTO.class);
+        ExpenseDTO responseDTO = expenseMapper.toDto(savedExpense);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
@@ -62,7 +63,9 @@ public class ExpenseController {
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable Long id) {
         return expenseService.getExpensesById(id)
-                .map(expense -> ResponseEntity.ok(modelMapper.map(expense, ExpenseDTO.class)))
+                .map(expense ->
+                        ResponseEntity.ok(expenseMapper.toDto(expense))
+                )
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -73,7 +76,7 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseDTO>> searchExpenses(@RequestParam String keyword) {
         List<ExpenseDTO> result = expenseService.searchByName(keyword)
                 .stream()
-                .map(expense -> modelMapper.map(expense, ExpenseDTO.class))
+                .map(expenseMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
     }
@@ -85,7 +88,7 @@ public class ExpenseController {
     public ResponseEntity<List<ExpenseDTO>> filterByAmountRange(@RequestParam BigDecimal min, @RequestParam BigDecimal max) {
         List<ExpenseDTO> result = expenseService.findByAmountBetween(min, max)
                 .stream()
-                .map(expense -> modelMapper.map(expense, ExpenseDTO.class))
+                .map(expenseMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
     }
@@ -98,8 +101,8 @@ public class ExpenseController {
     public ResponseEntity<ExpenseDTO> updateExpense(@PathVariable Long id,
                                                     @Valid @RequestBody ExpenseDTO expenseDTO) {
         try {
-            Expense updatedExpense = expenseService.updateExpense(id, modelMapper.map(expenseDTO, Expense.class));
-            return ResponseEntity.ok(modelMapper.map(updatedExpense, ExpenseDTO.class));
+            Expense updatedExpense = expenseService.updateExpense(id, expenseMapper.toEntity(expenseDTO));
+            return ResponseEntity.ok(expenseMapper.toDto(updatedExpense));
         } catch (NoSuchElementException e) {
             log.error("Expense not found for update with ID: {}", id);
             return ResponseEntity.notFound().build();
@@ -134,5 +137,28 @@ public class ExpenseController {
     ) {
         ExpenseStatisticsDTO statistics = expenseService.getMonthlyStatistics(year, month);
         return ResponseEntity.ok(statistics);
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<List<ExpenseDTO>> getTopExpenses(
+            @RequestParam
+            @DecimalMin(
+                    value = "0.00",
+                    inclusive = true,
+                    message = "Minimum amount must be positive or zero")
+            BigDecimal minAmount,
+
+            @RequestParam
+            @Min(value = 1, message = "Limit must be between 1 and 100")
+            @Max(value = 100, message = "Limit must be between 1 and 100")
+            int limit
+    ) {
+        List<ExpenseDTO> result = expenseService
+                .getTopExpenses(minAmount, limit)
+                .stream()
+                .map(expenseMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(result);
     }
 }

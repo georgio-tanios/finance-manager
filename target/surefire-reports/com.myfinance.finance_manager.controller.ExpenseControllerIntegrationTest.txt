@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.myfinance.finance_manager.controller.ExpenseControllerIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.948 s -- in com.myfinance.finance_manager.controller.ExpenseControllerIntegrationTest

@@ -19,7 +19,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Enterprise-style Expense service implementation.
@@ -221,12 +223,18 @@ public class ExpenseServiceImpl implements ExpenseService {
             );
         }
 
-        BigDecimal total = zero;
-        Expense highestExpense = null;
+        BigDecimal total = expensesOfMonth
+                .stream()
+                .map(Expense::getAmount)
+                .reduce(zero, BigDecimal::add);
+
+        Expense highestExpense = expensesOfMonth
+                .stream()
+                .max(Comparator.comparing(Expense::getAmount))
+                .orElseThrow();
+
 
         for (Expense expense : expensesOfMonth) {
-            total = total.add(expense.getAmount());
-
             if (highestExpense == null
                     || expense.getAmount()
                     .compareTo(highestExpense.getAmount()) > 0) {
@@ -248,6 +256,28 @@ public class ExpenseServiceImpl implements ExpenseService {
                 average,
                 expenseMapper.toDto(highestExpense)
         );
+    }
+
+    @Override
+    public List<Expense> getTopExpenses(BigDecimal minAmount, int limit) {
+        if(minAmount == null){
+            throw new IllegalArgumentException("Minimum amount must be provided");
+        }
+
+        if (minAmount.compareTo(BigDecimal.ZERO) < 0){
+            throw new IllegalArgumentException("Minimum amount must be positive or zero");
+        }
+
+        if (limit<1 || limit>100){
+            throw new IllegalArgumentException("Limit must be between 1 and 100");
+        }
+
+        return expenseRepository.findAll()
+                .stream()
+                .filter(expense -> expense.getAmount().compareTo(minAmount) >= 0)
+                .sorted(Comparator.comparing(Expense::getAmount).reversed())
+                .limit(limit)
+                .toList();
     }
 
 }

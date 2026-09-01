@@ -55,4 +55,5 @@ public interface ExpenseService {
     Page<Expense> getExpensesPaginatedAndSorted(int page, int size, String sortBy, String direction);
 
     ExpenseStatisticsDTO getMonthlyStatistics(int year, int month);
+    List<Expense> getTopExpenses(BigDecimal minAmount, int limit);
 }
