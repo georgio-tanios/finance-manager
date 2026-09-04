@@ -1,0 +1,13 @@
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\config\AppConfig.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\config\ModelMapperConfig.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\controller\ExpenseController.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\dto\ExpenseDTO.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\dto\ExpenseStatisticsDTO.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\exception\GlobalExceptionHandler.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\exception\ResourceNotFoundException.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\FinanceManagerApplication.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\mapper\ExpenseMapper.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\model\Expense.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\repository\ExpenseRepository.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\service\ExpenseService.java
+C:\projects\finance-manager\src\main\java\com\myfinance\finance_manager\service\impl\ExpenseServiceImpl.java

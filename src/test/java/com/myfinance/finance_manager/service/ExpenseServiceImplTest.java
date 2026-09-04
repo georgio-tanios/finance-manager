@@ -9,12 +9,15 @@ import com.myfinance.finance_manager.repository.ExpenseRepository;
 import com.myfinance.finance_manager.service.impl.ExpenseServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -208,5 +211,53 @@ class ExpenseServiceImplTest {
         verify(expenseMapper).toDto(rentExpense);
 
         verifyNoMoreInteractions(expenseMapper);
+    }
+
+    @Test
+    void getTopExpenses_shouldFilterSortAndLimit(){
+
+        //Arrange
+        Expense alimentation = new Expense("Food expense", new BigDecimal("100.00"),LocalDate.of(2026, 7, 12));
+        Expense transportation = new Expense("Transportation", new BigDecimal("150.00"), LocalDate.of(2026, 7, 12));
+        Expense internet = new Expense("Internet", new BigDecimal("75.50"), LocalDate.of(2026, 7, 12));
+        Expense gym = new Expense("Gym", new BigDecimal("25.00"), LocalDate.of(2026, 7, 12));
+
+        List<Expense> allExpenses  = List.of(alimentation,transportation,internet,gym);
+        when(expenseRepository.findAll()).thenReturn(allExpenses);
+
+        //Act
+        List<Expense> result = expenseService.getTopExpenses(new BigDecimal("75.50"), 2);
+
+        //Assert
+        assertAll(
+                () -> assertEquals(2, result.size()),
+                () -> assertSame(transportation, result.get(0)),
+                () -> assertSame(alimentation, result.get(1))
+        );
+
+        verify(expenseRepository, times(1)).findAll();
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 101})
+    void getTopExpenses_shouldThrowException_whenLimitIsInvalid(
+            int invalidLimit
+    ) {
+        // Act
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> expenseService.getTopExpenses(
+                        BigDecimal.ZERO,
+                        invalidLimit
+                )
+        );
+
+        // Assert
+        assertEquals(
+                "Limit must be between 1 and 100",
+                exception.getMessage()
+        );
+
+        verifyNoInteractions(expenseRepository);
     }
 }
