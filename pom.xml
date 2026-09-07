@@ -12,7 +12,7 @@
 	<artifactId>finance-manager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>finance-manager</name>
-	<description>Demo project for Spring Boot</description>
+	<description>REST API for personal finance management built with Java 17 and Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
