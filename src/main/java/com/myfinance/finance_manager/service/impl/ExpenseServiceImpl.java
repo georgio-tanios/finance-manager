@@ -233,15 +233,6 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .max(Comparator.comparing(Expense::getAmount))
                 .orElseThrow();
 
-
-        for (Expense expense : expensesOfMonth) {
-            if (highestExpense == null
-                    || expense.getAmount()
-                    .compareTo(highestExpense.getAmount()) > 0) {
-                highestExpense = expense;
-            }
-        }
-
         BigDecimal average = total.divide(
                 BigDecimal.valueOf(expensesOfMonth.size()),
                 2,
