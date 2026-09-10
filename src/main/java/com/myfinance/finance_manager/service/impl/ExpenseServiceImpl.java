@@ -271,4 +271,9 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .toList();
     }
 
+    @Override
+    public Page<Expense> getAllExpenses(Pageable pageable) {
+        return expenseRepository.findAll(pageable);
+    }
+
 }

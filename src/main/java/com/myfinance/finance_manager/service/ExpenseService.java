@@ -3,6 +3,7 @@ package com.myfinance.finance_manager.service;
 import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
 import com.myfinance.finance_manager.model.Expense;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -56,4 +57,5 @@ public interface ExpenseService {
 
     ExpenseStatisticsDTO getMonthlyStatistics(int year, int month);
     List<Expense> getTopExpenses(BigDecimal minAmount, int limit);
+    Page<Expense> getAllExpenses(Pageable pageable);
 }

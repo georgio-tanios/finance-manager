@@ -8,6 +8,7 @@ import com.myfinance.finance_manager.model.Expense;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -154,5 +155,93 @@ class ExpenseControllerTest {
 
         verify(expenseMapper).toDto(transportation);
         verify(expenseMapper).toDto(food);
+    }
+
+    @Test
+    void getAllExpenses_shouldReturnPaginatedExpenses() throws Exception{
+        //Arrange
+        Expense expense = new Expense(
+                "Food",
+                new BigDecimal("20.00"),
+                LocalDate.of(2026, 9, 8)
+        );
+
+        ExpenseDTO expenseDTO = new ExpenseDTO();
+        expenseDTO.setName("Food");
+        expenseDTO.setAmount(new BigDecimal("20.00"));
+        expenseDTO.setExpenseDate(LocalDate.of(2026, 9, 8));
+
+        Pageable pageable = PageRequest.of(
+                0,
+                2,
+                Sort.by("expenseDate").descending()
+        );
+
+        Page<Expense> expensePage = new PageImpl<>(
+                List.of(expense),
+                pageable,
+                5
+        );
+
+        when(expenseService.getAllExpenses(pageable)).thenReturn(expensePage);
+        when(expenseMapper.toDto(expense)).thenReturn(expenseDTO);
+
+        //Act + Assert
+        mockMvc.perform(
+                        get("/api/expenses")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Food"))
+                .andExpect(jsonPath("$.content[0].amount").value(20.00))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(5))
+                .andExpect(jsonPath("$.totalPages").value(3));
+
+        verify(expenseService).getAllExpenses(pageable);
+        verify(expenseMapper).toDto(expense);
+    }
+
+    @Test
+    void getAllExpenses_shouldReturnBadRequest_whenPageIsNegative()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/api/expenses")
+                                .param("page", "-1")
+                                .param("size", "10")
+                )
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(expenseService);
+    }
+
+    @Test
+    void getAllExpenses_shouldReturnBadRequest_whenSortFieldIsInvalid()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/api/expenses")
+                                .param("sortBy", "invalidField")
+                )
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(expenseService);
+    }
+
+    @Test
+    void getAllExpenses_shouldReturnBadRequest_whenDirectionIsInvalid()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/api/expenses")
+                                .param("direction", "random")
+                )
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(expenseService);
     }
 }

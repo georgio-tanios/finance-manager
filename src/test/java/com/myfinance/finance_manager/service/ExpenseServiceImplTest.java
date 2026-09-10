@@ -24,6 +24,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 @ExtendWith(MockitoExtension.class)
 class ExpenseServiceImplTest {
 
@@ -259,5 +265,52 @@ class ExpenseServiceImplTest {
         );
 
         verifyNoInteractions(expenseRepository);
+    }
+
+    @Test
+    void getAllExpenses_shouldReturnRequestedPage() {
+
+        //Arrange
+        Expense expense1 = new Expense(
+                "Food",
+                new BigDecimal("20.00"),
+                LocalDate.of(2026, 9, 8)
+        );
+
+        Expense expense2 = new Expense(
+                "Transport",
+                new BigDecimal("50.00"),
+                LocalDate.of(2026, 9, 7)
+        );
+
+        Pageable pageable = PageRequest.of(
+                0,
+                2,
+                Sort.by("expenseDate").descending()
+        );
+
+        Page<Expense> expectedPage = new PageImpl<>(
+                List.of(expense1, expense2),
+                pageable,
+                5
+        );
+
+        when(expenseRepository.findAll(pageable)).thenReturn(expectedPage);
+
+        //Act
+        Page<Expense> result = expenseService.getAllExpenses(pageable);
+
+        //Assert
+        assertAll(
+                () -> assertSame(expectedPage, result),
+                () -> assertEquals(2, result.getContent().size()),
+                () -> assertEquals(5, result.getTotalElements()),
+                () -> assertEquals(3, result.getTotalPages()),
+                () -> assertEquals(0, result.getNumber()),
+                () -> assertEquals(2, result.getSize())
+        );
+
+        verify(expenseRepository, times(1))
+                .findAll(pageable);
     }
 }

@@ -2,6 +2,7 @@ package com.myfinance.finance_manager.controller;
 
 import com.myfinance.finance_manager.dto.ExpenseDTO;
 import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
+import com.myfinance.finance_manager.dto.PageResponseDTO;
 import com.myfinance.finance_manager.model.Expense;
 import com.myfinance.finance_manager.service.ExpenseService;
 import com.myfinance.finance_manager.mapper.ExpenseMapper;
@@ -12,8 +13,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,15 +40,54 @@ public class ExpenseController {
     private final ExpenseMapper expenseMapper;
 
     // GET all expenses
-    @Operation(summary = "Get all expenses", description = "Fetch a list of all saved expenses")
-    @ApiResponse(responseCode = "200", description = "Expenses retrieved successfully")
     @GetMapping
-    public ResponseEntity<List<ExpenseDTO>> getAllExpenses() {
-        List<ExpenseDTO> expenses = expenseService.getAllExpenses()
-                .stream()
-                .map(expenseMapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(expenses);
+    public ResponseEntity<PageResponseDTO<ExpenseDTO>> getAllExpenses(
+            @RequestParam(defaultValue = "0")
+            @Min(value= 0, message = "Page must be positive or zero")
+            int page,
+
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "Size must be between 1 and 100")
+            @Max(value = 100, message = "Size must be between 1 and 100")
+            int size,
+
+            @RequestParam(defaultValue = "expenseDate")
+            @Pattern(
+                    regexp = "name|amount|expenseDate",
+                    message = "Sort field must be name, amount or expenseDate"
+            )
+            String sortBy,
+
+            @RequestParam(defaultValue = "desc")
+            @Pattern(
+                    regexp = "(?i)asc|desc",
+                    message = "Direction must be asc or desc"
+            )
+            String direction
+    ){
+        Sort.Direction sortDirection =
+                Sort.Direction.fromString(direction);
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortBy)
+        );
+
+        Page<ExpenseDTO> expensePage = expenseService.getAllExpenses(pageable).map(expenseMapper::toDto);
+
+        PageResponseDTO<ExpenseDTO> response =
+                new PageResponseDTO<>(
+                        expensePage.getContent(),
+                        expensePage.getNumber(),
+                        expensePage.getSize(),
+                        expensePage.getTotalElements(),
+                        expensePage.getTotalPages(),
+                        expensePage.isFirst(),
+                        expensePage.isLast()
+                );
+
+        return ResponseEntity.ok(response);
     }
 
     // CREATE a new expense
