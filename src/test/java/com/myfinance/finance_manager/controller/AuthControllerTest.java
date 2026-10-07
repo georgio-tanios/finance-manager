@@ -1,16 +1,21 @@
 package com.myfinance.finance_manager.controller;
 
 import com.myfinance.finance_manager.config.SecurityConfig;
+import com.myfinance.finance_manager.dto.LoginRequestDTO;
+import com.myfinance.finance_manager.dto.LoginResponseDTO;
 import com.myfinance.finance_manager.dto.RegisterRequestDTO;
 import com.myfinance.finance_manager.dto.UserResponseDTO;
 import com.myfinance.finance_manager.exception.EmailAlreadyExistsException;
 import com.myfinance.finance_manager.model.Role;
+import com.myfinance.finance_manager.security.CustomUserDetailsService;
+import com.myfinance.finance_manager.security.JwtService;
 import com.myfinance.finance_manager.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,6 +35,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     void register_shouldReturnCreatedUser() throws Exception {
@@ -120,5 +131,64 @@ class AuthControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message")
                         .value("Email is already registered"));
+    }
+
+    @Test
+    void login_shouldReturnToken_whenCredentialsAreValid()
+            throws Exception {
+
+        LoginResponseDTO response = new LoginResponseDTO(
+                "generated-jwt-token",
+                "Bearer"
+        );
+
+        when(authService.login(any(LoginRequestDTO.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "email": "alice@example.com",
+                              "password": "password123"
+                            }
+                            """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken")
+                        .value("generated-jwt-token"))
+                .andExpect(jsonPath("$.tokenType")
+                        .value("Bearer"));
+
+        verify(authService).login(
+                argThat(request ->
+                        request.email().equals("alice@example.com")
+                                && request.password()
+                                .equals("password123")
+                )
+        );
+    }
+
+    @Test
+    void login_shouldReturnUnauthorized_whenCredentialsAreInvalid()
+            throws Exception {
+
+        when(authService.login(any(LoginRequestDTO.class)))
+                .thenThrow(
+                        new BadCredentialsException(
+                                "Bad credentials"
+                        )
+                );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                              "email": "alice@example.com",
+                              "password": "wrong-password"
+                            }
+                            """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid email or password"));
     }
 }

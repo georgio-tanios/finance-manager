@@ -1,5 +1,7 @@
 package com.myfinance.finance_manager.controller;
 
+import com.myfinance.finance_manager.dto.LoginRequestDTO;
+import com.myfinance.finance_manager.dto.LoginResponseDTO;
 import com.myfinance.finance_manager.dto.RegisterRequestDTO;
 import com.myfinance.finance_manager.dto.UserResponseDTO;
 import com.myfinance.finance_manager.service.AuthService;
@@ -28,5 +30,14 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(user);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(
+            @Valid @RequestBody LoginRequestDTO request
+    ) {
+        LoginResponseDTO response = authService.login(request);
+
+        return ResponseEntity.ok(response);
     }
 }

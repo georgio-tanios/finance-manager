@@ -1,14 +1,24 @@
 package com.myfinance.finance_manager.controller;
 
+import com.myfinance.finance_manager.config.SecurityConfig;
 import com.myfinance.finance_manager.dto.ExpenseStatisticsDTO;
+import com.myfinance.finance_manager.security.CustomUserDetailsService;
+import com.myfinance.finance_manager.security.JwtAuthenticationFilter;
+import com.myfinance.finance_manager.security.JwtService;
 import com.myfinance.finance_manager.service.ExpenseService;
 import com.myfinance.finance_manager.mapper.ExpenseMapper;
 import com.myfinance.finance_manager.dto.ExpenseDTO;
 import com.myfinance.finance_manager.model.Expense;
+import io.jsonwebtoken.MalformedJwtException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,7 +34,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 @WebMvcTest(ExpenseController.class)
-@WithMockUser(username = "test-user", roles = "USER")
+@Import({
+        SecurityConfig.class,
+        JwtAuthenticationFilter.class
+})
+@WithMockUser(
+        username = "test-user",
+        roles = "USER"
+)
 class ExpenseControllerTest {
 
     @Autowired
@@ -35,6 +52,12 @@ class ExpenseControllerTest {
 
     @MockitoBean
     private ExpenseMapper expenseMapper;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     void getMonthlyStatistics_shouldReturnStatistics_whenRequestIsValid()
@@ -244,6 +267,116 @@ class ExpenseControllerTest {
                 )
                 .andExpect(status().isBadRequest());
 
+        verifyNoInteractions(expenseService);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void protectedEndpoint_shouldReturnUnauthorized_whenTokenIsMissing()
+            throws Exception {
+
+        mockMvc.perform(
+                        get("/api/expenses/statistics")
+                                .param("year", "2026")
+                                .param("month", "7")
+                )
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(expenseService);
+        verifyNoInteractions(jwtService);
+        verifyNoInteractions(customUserDetailsService);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void protectedEndpoint_shouldAllowRequest_whenTokenIsValid()
+            throws Exception {
+
+        // Arrange
+        String token = "valid-jwt-token";
+        String email = "alice@example.com";
+
+        UserDetails userDetails = User.builder()
+                .username(email)
+                .password("encoded-password")
+                .roles("USER")
+                .build();
+
+        ExpenseStatisticsDTO statistics =
+                new ExpenseStatisticsDTO(
+                        2026,
+                        7,
+                        4,
+                        new BigDecimal("350.50"),
+                        new BigDecimal("87.63"),
+                        null
+                );
+
+        when(jwtService.extractUsername(token))
+                .thenReturn(email);
+
+        when(customUserDetailsService.loadUserByUsername(email))
+                .thenReturn(userDetails);
+
+        when(jwtService.isTokenValid(token, userDetails))
+                .thenReturn(true);
+
+        when(expenseService.getMonthlyStatistics(2026, 7))
+                .thenReturn(statistics);
+
+        // Act + Assert
+        mockMvc.perform(
+                        get("/api/expenses/statistics")
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        "Bearer " + token
+                                )
+                                .param("year", "2026")
+                                .param("month", "7")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.year").value(2026))
+                .andExpect(jsonPath("$.month").value(7));
+
+        verify(jwtService).extractUsername(token);
+
+        verify(customUserDetailsService)
+                .loadUserByUsername(email);
+
+        verify(jwtService)
+                .isTokenValid(token, userDetails);
+
+        verify(expenseService)
+                .getMonthlyStatistics(2026, 7);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void protectedEndpoint_shouldReturnUnauthorized_whenTokenIsInvalid()
+            throws Exception {
+
+        String token = "invalid-jwt-token";
+
+        when(jwtService.extractUsername(token))
+                .thenThrow(
+                        new MalformedJwtException(
+                                "Invalid JWT"
+                        )
+                );
+
+        mockMvc.perform(
+                        get("/api/expenses/statistics")
+                                .header(
+                                        HttpHeaders.AUTHORIZATION,
+                                        "Bearer " + token
+                                )
+                                .param("year", "2026")
+                                .param("month", "7")
+                )
+                .andExpect(status().isUnauthorized());
+
+        verify(jwtService).extractUsername(token);
+        verifyNoInteractions(customUserDetailsService);
         verifyNoInteractions(expenseService);
     }
 }

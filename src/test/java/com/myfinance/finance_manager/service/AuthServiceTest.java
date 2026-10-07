@@ -1,17 +1,26 @@
 package com.myfinance.finance_manager.service;
 
+import com.myfinance.finance_manager.dto.LoginRequestDTO;
+import com.myfinance.finance_manager.dto.LoginResponseDTO;
 import com.myfinance.finance_manager.dto.RegisterRequestDTO;
 import com.myfinance.finance_manager.dto.UserResponseDTO;
 import com.myfinance.finance_manager.exception.EmailAlreadyExistsException;
 import com.myfinance.finance_manager.model.AppUser;
 import com.myfinance.finance_manager.model.Role;
 import com.myfinance.finance_manager.repository.AppUserRepository;
+import com.myfinance.finance_manager.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +39,12 @@ public class AuthServiceTest {
 
     @InjectMocks
     private AuthService authService;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private JwtService jwtService;
 
     @Test
     void register_shouldNormalizeEmailEncodePasswordAndSaveUser() {
@@ -109,5 +124,93 @@ public class AuthServiceTest {
 
         verify(appUserRepository, never())
                 .save(any(AppUser.class));
+    }
+
+    @Test
+    void login_shouldAuthenticateUserAndReturnToken() {
+        // Arrange
+        LoginRequestDTO request = new LoginRequestDTO(
+                "  Alice@Example.COM  ",
+                "password123"
+        );
+
+        UserDetails userDetails = User.builder()
+                .username("alice@example.com")
+                .password("encoded-password")
+                .roles("USER")
+                .build();
+
+        Authentication authenticatedUser =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+
+        when(authenticationManager.authenticate(
+                any(Authentication.class)
+        )).thenReturn(authenticatedUser);
+
+        when(jwtService.generateToken(userDetails))
+                .thenReturn("generated-jwt-token");
+
+        // Act
+        LoginResponseDTO result = authService.login(request);
+
+        // Assert
+        assertAll(
+                () -> assertEquals(
+                        "generated-jwt-token",
+                        result.accessToken()
+                ),
+                () -> assertEquals(
+                        "Bearer",
+                        result.tokenType()
+                )
+        );
+
+        verify(authenticationManager).authenticate(
+                argThat(authentication ->
+                        authentication.getName()
+                                .equals("alice@example.com")
+                                && authentication.getCredentials()
+                                .equals("password123")
+                )
+        );
+
+        verify(jwtService).generateToken(userDetails);
+    }
+
+    @Test
+    void login_shouldNotGenerateToken_whenCredentialsAreInvalid() {
+        // Arrange
+        LoginRequestDTO request = new LoginRequestDTO(
+                "alice@example.com",
+                "wrong-password"
+        );
+
+        when(authenticationManager.authenticate(
+                any(Authentication.class)
+        )).thenThrow(
+                new BadCredentialsException("Bad credentials")
+        );
+
+        // Act
+        BadCredentialsException exception = assertThrows(
+                BadCredentialsException.class,
+                () -> authService.login(request)
+        );
+
+        // Assert
+        assertEquals(
+                "Bad credentials",
+                exception.getMessage()
+        );
+
+        verify(authenticationManager).authenticate(
+                any(Authentication.class)
+        );
+
+        verifyNoInteractions(jwtService);
     }
 }
