@@ -1,0 +1,24 @@
+# Maven build output
+target/
+
+# Git
+.git/
+.gitignore
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Local environment files and secrets
+.env
+*.env
+
+# Operating system files
+.DS_Store
+Thumbs.db
