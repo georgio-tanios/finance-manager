@@ -38,6 +38,24 @@ This project is used to apply and strengthen modern backend development practice
 * Centralized exception handling with `GlobalExceptionHandler`
 * Consistent HTTP error responses
 
+### Authentication & Authorization
+
+* User registration and login
+* Password hashing with BCrypt
+* Stateless authentication with JWT
+* Role-based authorization with USER and ADMIN roles
+* Protected REST endpoints
+* Consistent 401 Unauthorized and 403 Forbidden responses
+
+### Containerization
+
+* Multi-stage Docker build
+* Non-root application container
+* Spring Boot and PostgreSQL orchestration with Docker Compose
+* PostgreSQL health check
+* Persistent PostgreSQL volume
+* Externalized configuration using environment variables
+
 ### API Documentation
 
 * Swagger / OpenAPI documentation
@@ -65,6 +83,10 @@ This project is used to apply and strengthen modern backend development practice
 * Mockito
 * MockMvc
 * Git
+* Spring Security
+* JSON Web Token (JWT)
+* Docker
+* Docker Compose
 
 ## Architecture
 
@@ -105,11 +127,22 @@ src/main/java/com/myfinance/finance_manager
 ├── mapper
 ├── model
 ├── repository
+├── security
 └── service
     └── impl
 ```
 
 ## Getting Started
+
+### Run with Docker Compose
+
+Docker Desktop must be installed and running.
+
+Create the local environment file from the provided template:
+
+```bash
+cp .env.example .env
+```
 
 ### Prerequisites
 
