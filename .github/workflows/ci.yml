@@ -1,0 +1,57 @@
+name: Finance Manager CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+
+        env:
+          POSTGRES_DB: finance_manager
+          POSTGRES_USER: finance_user
+          POSTGRES_PASSWORD: finance_password
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U finance_user -d finance_manager"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/finance_manager
+      DB_USERNAME: finance_user
+      DB_PASSWORD: finance_password
+      JWT_SECRET: dGVzdC1qd3Qtc2VjcmV0LXRlc3QtMzItYnl0ZXMtbG9uZw==
+      JWT_EXPIRATION_MS: 3600000
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build and run tests
+        run: mvn --batch-mode clean verify
