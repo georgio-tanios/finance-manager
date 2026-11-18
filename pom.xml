@@ -30,6 +30,11 @@
 		<java.version>17</java.version>
         <jjwt.version>0.13.0</jjwt.version>
         <jacoco.version>0.8.16</jacoco.version>
+        <sonar.organization>georgio-tanios</sonar.organization>
+        <sonar.projectKey>georgio-tanios_finance-manager</sonar.projectKey>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
