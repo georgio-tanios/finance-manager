@@ -66,6 +66,12 @@ jobs:
           mvn --batch-mode
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
 
+      - name: Build Docker image
+        run: >
+          docker build
+          --tag finance-manager:${{ github.sha }}
+          .
+
       - name: Upload JaCoCo coverage report
         uses: actions/upload-artifact@v7
         with:
